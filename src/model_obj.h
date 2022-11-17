@@ -72,6 +72,10 @@ public:
     bool LoadOBJ(const string &fileName);
     bool Load(vector<glm::dvec3> vertices, vector<glm::ivec3> face_indices);
     bool Load(MatrixD vertices, MatrixI face_indices);
+    bool Load(const float* const p_points,
+        const uint32_t countPoints,
+        const uint32_t* const p_triangles,
+        const uint32_t countTriangles);
     void SaveOBJ(const string &fileName);
     void PCA();
     void Normalize();

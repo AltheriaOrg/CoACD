@@ -5,6 +5,12 @@
 #include "config.h"
 #include <iostream>
 #include <cmath>
+#include <DebugCPP.h>
+
+void ManifoldPreprocess(Params& params, Model& input, Model& output)
+{
+    Manifold(input, output, params.prep_resolution);
+}
 
 void ManifoldPreprocess(Params& params, Model& m, ofstream& of)
 {
@@ -48,7 +54,7 @@ double MergeConvexHulls(Model& m, vector<Model>& meshs, vector<Model>& cvxs, Par
 
         size_t p1, p2;
 #ifdef _OPENMP
-#pragma omp parallel for default(none) shared(costMatrix,precostMatrix,cvxs,params) private(p1,p2)
+#pragma omp parallel for default(none) shared(costMatrix,precostMatrix,cvxs,params,bound,threshold,meshs) private(p1,p2)
 #endif
         for (int idx = 0; idx < bound; ++idx) {
             p1 = (int)(sqrt(8 * idx + 1) - 1) >> 1; // compute nearest triangle number index
@@ -291,4 +297,108 @@ void Compute(ofstream& of, Model& mesh, Params& params)
     SaveOBJ(objName, parts, params);
 
     of.close();
+}
+
+vector<Model>* ComputeLib(ofstream& of, Model& mesh, Params& params)
+{
+    vector<Model> InputParts = { mesh };
+    vector<Model> *parts, pmeshs;
+    parts = new vector<Model>();
+#ifdef _OPENMP
+    omp_lock_t writelock;
+    omp_init_lock(&writelock);
+#endif
+    clock_t start, end;
+    start = clock();
+
+    int iter = 0;
+    double cut_area;
+    while ((int)InputParts.size() > 0)
+    {
+        string str = "Iteration ";
+        str = str + to_string(iter) + " ------ waiting pool: " + to_string(InputParts.size()) + "\n";
+        Debug::Log(str);
+        std::cout << str << std::endl;
+
+        iter++;
+        vector<Model> tmp;
+#ifdef _OPENMP
+#pragma omp parallel for default(none) shared(InputParts,params,mesh,writelock,parts,pmeshs,tmp,cout) private(cut_area)
+#endif
+        for (int p = 0; p < (int)InputParts.size(); p++)
+        {
+            Model pmesh = InputParts[p], pCH;
+            Plane bestplane;
+            pmesh.ComputeVCH(pCH);
+            double h = ComputeHCost(pmesh, pCH, params.rv_k, params.resolution, params.seed, 0.0001, false);
+
+            if (h > params.threshold)
+            {
+                vector<Plane> planes, best_path;
+
+                // MCTS for cutting plane
+                Node* node = new Node(params);
+                State state(params, pmesh);
+                node->set_state(state);
+                Node* best_next_node = MonteCarloTreeSearch(params, node, best_path);
+                if (best_next_node == NULL)
+                {
+                    SyncNorm(mesh, pCH);
+#ifdef _OPENMP
+                    omp_set_lock(&writelock);
+#endif
+                    parts->push_back(pCH);
+                    pmeshs.push_back(pmesh);
+#ifdef _OPENMP
+                    omp_unset_lock(&writelock);
+#endif
+                }
+                else
+                {
+                    bestplane = best_next_node->state->current_value.first;
+                    TernaryMCTS(pmesh, params, bestplane, best_path, best_next_node->quality_value); // using Rv to Ternary refine
+                    free_tree(node, 0);
+
+                    Model pos, neg;
+                    bool clipf = Clip(pmesh, pos, neg, bestplane, cut_area);
+                    if (!clipf)
+                    {
+                        cout << "Wrong clip proposal!" << endl;
+                        exit(0);
+                    }
+#ifdef _OPENMP
+                    omp_set_lock(&writelock);
+#endif
+                    if ((int)pos.triangles.size() > 0)
+                        tmp.push_back(pos);
+                    if ((int)neg.triangles.size() > 0)
+                        tmp.push_back(neg);
+#ifdef _OPENMP
+                    omp_unset_lock(&writelock);
+#endif
+                }
+            }
+            else
+            {
+                SyncNorm(mesh, pCH);
+#ifdef _OPENMP
+                omp_set_lock(&writelock);
+#endif
+                parts->push_back(pCH);
+                pmeshs.push_back(pmesh);
+#ifdef _OPENMP
+                omp_unset_lock(&writelock);
+#endif
+            }
+        }
+        InputParts.clear();
+        InputParts = tmp;
+        tmp.clear();
+    }
+
+    MergeConvexHulls(mesh, pmeshs, *parts, params, of);
+    end = clock();
+
+    // convex meshes are located in `parts` var
+    return parts;
 }

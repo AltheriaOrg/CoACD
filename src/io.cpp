@@ -59,6 +59,29 @@ void SaveOBJ(const string &filename, vector<Model> parts, Params &params)
     os.close();
 }
 
+void SaveOBJwoRecover(const string& filename, vector<Model> parts)
+{
+    vector<int> v_numbers;
+    v_numbers.push_back(0);
+    std::ofstream os(filename);
+    for (int n = 0; n < (int)parts.size(); n++)
+    {
+        os << "o convex_" << n << endl;
+        for (int i = 0; i < (int)parts[n].points.size(); ++i)
+        {
+            os << "v " << parts[n].points[i][0] << " " << parts[n].points[i][1] << " " << parts[n].points[i][2] << "\n";
+        }
+        v_numbers.push_back(v_numbers[n] + (int)parts[n].points.size());
+        for (int i = 0; i < (int)parts[n].triangles.size(); ++i)
+        {
+            os << "f " << parts[n].triangles[i][0] + 1 + v_numbers[n]
+                << " " << parts[n].triangles[i][1] + 1 + v_numbers[n]
+                << " " << parts[n].triangles[i][2] + 1 + v_numbers[n] << "\n";
+        }
+    }
+    os.close();
+}
+
 void SaveOBJS(const string foldername, const string &filename, vector<Model> parts, Params &params)
 {
     RecoverParts(parts, params);

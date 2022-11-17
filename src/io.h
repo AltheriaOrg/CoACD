@@ -24,6 +24,7 @@
 //////////////// IO ////////////////
 void SaveConfig(ofstream &of, Params params);
 void SaveOBJ(const string &filename, vector<Model> parts, Params &params);
+void SaveOBJwoRecover(const string& filename, vector<Model> parts);
 void SaveOBJS(const string foldername, const string &filename, vector<Model> parts, Params &params);
 bool WriteVRML(ofstream &fout, Model mesh);
 void SaveVRML(const string &fileName, vector<Model> meshs, Params &params);

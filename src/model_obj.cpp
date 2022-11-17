@@ -490,6 +490,45 @@ bool Model::Load(vector<glm::dvec3> vertices, vector<glm::ivec3> face_indices)
     return true;
 }
 
+bool Model::Load(const float* const p_points,
+    const uint32_t countPoints,
+    const uint32_t* const p_triangles,
+    const uint32_t countTriangles)
+{
+    double x_min = INF, x_max = -INF, y_min = INF, y_max = -INF, z_min = INF, z_max = -INF;
+    for (int i = 0; i < countPoints; ++i)
+    {
+        int index_point = i * 3;
+        points.push_back({ (double)p_points[index_point], (double)p_points[index_point+1], (double)p_points[index_point+2] });
+
+        x_min = min(x_min, (double)p_points[index_point]);
+        x_max = max(x_max, (double)p_points[index_point]);
+        y_min = min(y_min, (double)p_points[index_point + 1]);
+        y_max = max(y_max, (double)p_points[index_point + 1]);
+        z_min = min(z_min, (double)p_points[index_point + 2]);
+        z_max = max(z_max, (double)p_points[index_point + 2]);
+    }
+
+    m_len = max(max(x_max - x_min, y_max - y_min), z_max - z_min);
+    m_Xmid = (x_max + x_min) / 2;
+    m_Ymid = (y_max + y_min) / 2;
+    m_Zmid = (z_max + z_min) / 2;
+    bbox[0] = x_min;
+    bbox[1] = x_max;
+    bbox[2] = y_min;
+    bbox[3] = y_max;
+    bbox[4] = z_min;
+    bbox[5] = z_max;
+
+    for (int i = 0; i < countTriangles; ++i)
+    {
+        int index_triangle = i * 3;
+        triangles.push_back({ (int)p_triangles[index_triangle], (int)p_triangles[index_triangle+1], (int)p_triangles[index_triangle+2] });
+    }
+
+    return true;
+}
+
 bool Model::Load(MatrixD vertices, MatrixI face_indices)
 {
     double x_min = INF, x_max = -INF, y_min = INF, y_max = -INF, z_min = INF, z_max = -INF;

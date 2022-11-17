@@ -3,6 +3,8 @@
 #include <sstream>
 #include <string>
 #include <time.h>
+#include <thread>
+#include "main_lib.h"
 
 #include "process.h"
 
@@ -10,6 +12,10 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
+  //may return 0 when not able to detect
+  const auto processor_count = std::thread::hardware_concurrency();
+  omp_set_num_threads(processor_count-1);
+  
   Params params;
 
   // Model files

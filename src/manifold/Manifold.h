@@ -70,3 +70,18 @@ int Manifold(ofstream& of, string input_model, Model& output, int resolution)
   
   return 0; 
 }
+
+int Manifold(Model& input, Model& output, int resolution)
+{
+	clock_t start, end;
+	Model_OBJ obj;
+	for (int i = 0; i < input.points.size(); ++i)
+		obj.vertices.push_back(glm::dvec3(input.points[i][0],input.points[i][1] ,input.points[i][2]));
+	for (int i = 0; i < input.triangles.size(); ++i)
+		obj.face_indices.push_back(glm::ivec3(input.triangles[i][0], input.triangles[i][1] , input.triangles[i][2]));
+	obj.Process_Manifold(resolution);
+
+	output.Load(obj.vertices, obj.face_indices);
+
+	return 0;
+}

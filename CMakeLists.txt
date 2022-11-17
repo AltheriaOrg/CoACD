@@ -33,7 +33,7 @@ include_directories(3rd/libigl/include)
 include_directories(3rd/cdt/CDT)
 
 set(
-    main_SRC
+    common_SRC
     src/hausdorff.h
     src/shape.cpp
     src/shape.h
@@ -78,10 +78,32 @@ set(
     src/mcts.h
     src/process.cpp
     src/process.h
-    src/main.cpp 
 )
+
+set(
+    main_SRC
+    ${common_SRC}
+    src/main.cpp
+    src/main_lib.h
+    src/DebugCPP.h
+    src/DebugCPP.cpp
+)
+ 
+set(
+    lib_SRC
+    ${common_SRC}
+    src/main_lib.cpp
+    src/main_lib.h
+    src/DebugCPP.h
+    src/DebugCPP.cpp
+)   
 
 add_executable(
     main
     ${main_SRC}
+)
+
+add_library(
+    coacd_lib SHARED
+    ${lib_SRC}
 )
