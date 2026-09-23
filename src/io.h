@@ -1,3 +1,4 @@
+#pragma once
 #include <algorithm>
 #include <assert.h>
 #include <fstream>
@@ -5,7 +6,6 @@
 #include <iostream>
 #include <sstream>
 #include <stdio.h>
-#include <string.h>
 #include <string>
 #include <vector>
 #include <cstdlib>
@@ -16,15 +16,22 @@
 #include <map>
 #include <unordered_map>
 
-#pragma once
-
 #include "shape.h"
 #include "model_obj.h"
 
-//////////////// IO ////////////////
-void SaveConfig(ofstream &of, Params params);
-void SaveOBJ(const string &filename, vector<Model> parts, Params &params);
-void SaveOBJwoRecover(const string& filename, vector<Model> parts);
-void SaveOBJS(const string foldername, const string &filename, vector<Model> parts, Params &params);
-bool WriteVRML(ofstream &fout, Model mesh);
-void SaveVRML(const string &fileName, vector<Model> meshs, Params &params);
+using std::cout;
+using std::endl;
+using std::ios;
+using std::to_string;
+
+namespace coacd
+{
+
+    //////////////// IO ////////////////
+    void SaveMesh(const std::string &filename, Model &mesh);
+    void SaveConfig(Params params);
+    void SaveOBJ(const std::string &filename, vector<Model> parts, Params &params);
+    void SaveOBJs(const std::string &foldername, const std::string &filename, vector<Model> parts, Params &params);
+    bool WriteVRML(ofstream &fout, Model mesh);
+    void SaveVRML(const std::string &fileName, vector<Model>& meshes, Params &params);
+}
