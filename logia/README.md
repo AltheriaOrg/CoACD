@@ -66,7 +66,18 @@ logia_smoke_test.exe 8 0.05
 
 It loads the DLL by name, decomposes a 14,400-triangle torus eight times and
 prints hulls and private memory per run. Hull counts must be identical and
-memory flat from run 2. The 2022 build grew about 42 MB per run on this test.
+memory flat from run 2 (it settles around 20–22 MB, with early runs spiking to ~45 MB as the
+allocator keeps and returns pages, with no upward trend).
+
+Reference numbers on this test (threshold 0.05, same machine):
+
+| Build | Per run | Hulls | Memory |
+|---|---|---|---|
+| 2022 fork (Logia before this) | ~21 s | varies per run (clock seed) | grows, 82.6 MB after two runs |
+| This build | ~12.5 s | 10 every run | flat |
+
+A build that takes ~85 s per run was compiled without optimisation: check
+the MSVC branch of `CMAKE_CXX_FLAGS_RELEASE` in the root `CMakeLists.txt`.
 
 ## Syncing with upstream again
 
@@ -75,5 +86,8 @@ git fetch upstream
 git merge upstream/main
 ```
 
-Upstream never touches `logia/`. The only line outside it is the
-`add_subdirectory(logia)` block at the end of the root `CMakeLists.txt`.
+Upstream never touches `logia/`. Outside it, the fork changes two things in
+the root `CMakeLists.txt`: the `add_subdirectory(logia)` block at the end,
+and MSVC Release flags (`/O2 /Ob2 /DNDEBUG` instead of `-O3`, which MSVC
+ignores). The second is an upstream bug worth sending upstream; once it is
+fixed there, drop ours in the merge.
