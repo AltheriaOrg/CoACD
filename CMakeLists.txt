@@ -176,3 +176,11 @@ configure_package_config_file(
 
 install(FILES "${CMAKE_BINARY_DIR}/CoACDConfig.cmake"
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/CoACD)
+
+# ##############################################################################
+# Logia Unity plugin (AltheriaOrg fork only)
+# ##############################################################################
+
+if(WITH_3RD_PARTY_LIBS)
+    add_subdirectory(logia)
+endif()
